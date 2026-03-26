@@ -1,83 +1,124 @@
-def read_grades():
-    datos = []
+#----------------------------------------------------
+#variables globales: variables disponibles para todo el programa
+estudiantes = []
 
-    with open("registros.txt", "r") as archivo:
-        for linea in archivo:
-            nombre, materia, nota = linea.strip().split(",")
-            datos.append([nombre, materia, int(nota)])
+FILENAME = 'estudiantes.txt'
 
-    return datos
-read_grades()
-def print_average():
-    datos = read_grades()
+#NOTA: un estudiantes será una lista de ID, nombre, lista de notas, privincia 
+#Ejemplo: [1, 'Diego Mora', [100,99,98,100,90], 'Cartago']
 
-    promedios = {}
-    conteo = {}
+#----------------------------------------------------
+# funciones de manejo de archivos
+#crea un archivo
+#E: path del archivo
+def crear_archivo(file_path):
+        archivo = open(file_path, 'w') # w crea o trunca el archivo
+        archivo.close()
 
-    for nombre, materia, nota in datos:
-        if nombre not in promedios:
-            promedios[nombre] = 0
-            conteo[nombre] = 0
+#guarda un string en un archivo. Le cae encima al contenido del archivo
+#E: path del archivo, contenido
+def guardar_archivo(file_path, content):
+        archivo = open(file_path, 'w') # w crea o trunca el archivo
+        archivo.write(content)
+        archivo.close()
 
-        promedios[nombre] += nota
-        conteo[nombre] += 1
+#lee la información de un archivo
+#E: path
+#S: string con el contenido del archivo
+def leer_archivo(path):
+        archivo = open(path, 'r')
+        contenido = archivo.read()
+        archivo.close()
+        return contenido
 
-    for nombre in promedios:
-        promedio = promedios[nombre] / conteo[nombre]
-        print(f"{nombre}: {promedio}")
-print_average()
 
-def write_average():
-    datos = read_grades()
+#-------------------------------------
+#carga el archivo de estudiantes en la lista  DISCO >>> MEMORIA
+def cargar_estudiantes():
+        global estudiantes
+        strLista = leer_archivo(FILENAME)
+        if strLista != '':
+                estudiantes = eval(strLista)
 
-    promedios = {}
-    conteo = {}
+#CRUD de estudiantes
+#Create: insertar un estudiante
+#Read: lee los estudiantes
+#Update: actualiza un estudiante
+#Delete: elimina un estudiante
 
-    for nombre, materia, nota in datos:
-        if nombre not in promedios:
-            promedios[nombre] = 0
-            conteo[nombre] = 0
 
-        promedios[nombre] += nota
-        conteo[nombre] += 1
+#buscar_por_id
+#dado un id, retorn la lista del estudiante con ese ID o [] si no lo encuentra
+#Ejemplo: [1, 'Diego Mora', [100,99,98,100,90], 'Cartago']
+def buscar_por_id (ID):
+        global estudiantes
+        for est in estudiantes:
+                if est[0] == ID:
+                        return est
+        return []
 
-    with open("promedios.txt", "w") as archivo:
-        for nombre in promedios:
-            promedio = promedios[nombre] / conteo[nombre]
-            archivo.write(f"{nombre}: {promedio}\n")
-write_average()
 
-def process_log():
-    actividades = {}
+#insertar estudiante
+#dados los datos de un estudiante inserta en la lista y guarda en archivo
+#no permite repetir IDs
+def insertar_estudiante(ID, nombre, notas, provincia):
+        global estudiantes
+        id_buscado = buscar_por_id (ID)
 
-    with open("bitacora.log") as archivo:
-        for linea in archivo:
-            partes = linea.strip().split()
-            usuario = partes[3]  # nombre después de "Usuario"
+        if id_buscado == []: #es [] porque no lo encontró, por tanto puede inserta
+                estudiantes += [[ID, nombre, notas, provincia]]
+                guardar_archivo(FILENAME, str(estudiantes))
+        
 
-            actividades[usuario] = actividades.get(usuario, 0) + 1
 
-    # usuario más activo
-    mas_activo = max(actividades, key=actividades.get)
-    print(mas_activo)
 
-    # escribir archivo de salida
-    with open("user_activity.txt", "w") as salida:
-        for usuario, total in actividades.items():
-            salida.write(f"Usuario {usuario} tiene {total} actividades\n")
-process_log()
+#actualizar estudiante
+#dado un ID, un nombre y una lista de notas, modifique el nombre y haga append
+# de las notas en el estudiante del ID dado
+def actualizar_estudiante(ID, nombre, notas):
+        global estudiantes
 
-def read_map():
-    matriz = []
+        buscado = buscar_por_id (ID)
+        if buscado != []:
+                buscado[1] = nombre
+                buscado[2] += notas  #buscado[2].expand(notas)
+                guardar_archivo(FILENAME, str(estudiantes))
+        
+        
+#eliminar estudiante
+#dado un ID elimine el estudiante de la lista, si no encuentra el id
+#no hace nada
+def eliminar_estudiante(ID):
+        global estudiantes
+        buscado = buscar_por_id (ID)
+        if buscado != []:
+                estudiantes.remove(buscado)
+                guardar_archivo(FILENAME, str(estudiantes))
 
-    with open("mapa.txt") as archivo:
-        for linea in archivo:
-            fila = list(linea.strip())
-            matriz.append(fila)
+def eliminar_estudiante_v2 (ID):
+        global estudiantes
+        res = []
+        for est in estudiantes:
+                if est[0] != ID:
+                        res += [est]
+        estudiantes = res
+        guardar_archivo(FILENAME, str(estudiantes))
 
-    # recorrer la matriz
-    for i in range(len(matriz)):
-        for j in range(len(matriz[i])):
-            if matriz[i][j] == "X":
-                print(f"({i},{j})", end=" ")
-read_map()
+
+'''
+"Si terminan"
+haga una función que agregue una nota a todos los estudiantes de la lista
+
+agregarNota(95) > a todos los estudiantes les agrega un 95 a sus notas
+'''
+def agregar_nota (nota):
+        global estudiantes
+        if nota >= 0 and nota <= 100:
+                for est in estudiantes:
+                        est[2] += [nota]
+                guardar_archivo(FILENAME, str(estudiantes))
+
+
+
+#cada vez que le de F5, se llama esta línea y carga el archivo a la lista
+cargar_estudiantes()
