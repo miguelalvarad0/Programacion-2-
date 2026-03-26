@@ -1,0 +1,6 @@
+Carlos,Math,85
+Ana,Science,91
+Carlos,Science,78
+Luis,Math,66
+Ana,Math,72
+Luis,Science,88
